@@ -27,8 +27,10 @@ MYSQL_PASSWORD=gitea
 ```
 
 ## Getting started
-To set up __Lux__:
-`docker-compose --verbose up -d`
+To set up __Lux__, run:
+```
+docker-compose --verbose up -d
+```
 
 ## Configuration
 Once the system is running, go to your domain https://code.mydomain.com, click _Sign In_ and do the final system configuration.
