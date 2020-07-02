@@ -1,49 +1,132 @@
-version: "2"
+# docker-compose.yml
+
+# Sets up a Source Control Management system like Github.com, using Gitea,
+# MySQL, and Traefik. This work is a n extension of the intructions detailed
+# at https://docs.gitea.io/en-us/install-with-docker/
+
+version: "3.3"
 
 networks:
-  gitea:
+  web:
+    external: true
+  db:
     external: false
 
 volumes:
   gitea:
     driver: local
+  db:
+    driver: local
 
 services:
-  server:
-    image: gitea/gitea:1.12.1
+  traefik:
+    image: "traefik:v2.2"
+    container_name: "traefik"
+    restart: unless-stopped
     environment:
+      DO_AUTH_TOKEN: "${DO_AUTH_TOKEN}"
+    command:
+      - "--log.level=INFO"
+      - "--providers.docker=true"
+      - "--entryPoints.ssh.address=:2222"
+      - "--entryPoints.web.address=:80"
+      - "--entryPoints.websecure.address=:443"
+      - "--providers.docker.exposedByDefault=false"
+      - "--api=true"
+      - "--api.dashboard=true"
+      # LetsEncrypt params
+      - "--certificatesResolvers.le.acme.email=${LE_EMAIL}"
+      - "--certificatesResolvers.le.acme.storage=/acme.json"
+      - "--certificatesResolvers.le.acme.dnsChallenge=true"
+      - "--certificatesResolvers.le.acme.dnschallenge.provider=digitalocean"
+    labels:
+      - "traefik.enable=true"
+      # Middleware global redirect to https
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+      - "traefik.http.routers.redirs.rule=hostregexp(`{host:.+}`)"
+      - "traefik.http.routers.redirs.entrypoints=web"
+      - "traefik.http.routers.redirs.middlewares=redirect-to-https"
+      # Dashboard
+      - "traefik.http.routers.traefik.rule=Host(`${TRAEFIK_DOMAIN}`)"
+      - "traefik.http.routers.traefik.entrypoints=websecure"
+      - "traefik.http.routers.traefik.tls=true"
+      - "traefik.http.routers.traefik.service=api@internal"
+      - "traefik.http.routers.traefik.tls.certresolver=le"
+      - "traefik.http.routers.traefik.middlewares=auth"
+      # Gen pw with: echo $(htpasswd -nb user pwd) | sed -e s/\\$/\\$\\$/g
+      - "traefik.http.middlewares.auth.basicauth.users=traefik:$$apr1$$qu17ZAy1$$CV4OFN7oV3vRXaSEpPpeA0"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "2222:2222"
+    networks:
+      - web
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./acme.json:/acme.json"
+    # Optional: Use existing SSL certs instead of generating new ones with LE
+      #- "./certs:/etc/certs/"
+    #tls:
+    #  certificates:
+    #    - certFile: /etc/certs/fullchain.pem
+    #      keyFile: /etc/certs/privkey.pem
+
+  gitea:
+    image: "gitea/gitea:1.12.1"
+    container_name: "gitea"
+    restart: unless-stopped
+    environment:
+      - DOMAIN=${SITE_DOMAIN}
+      - SSH_DOMAIN=${SITE_DOMAIN}
+      - SSH_PORT=2222
+      - SSH_LISTEN_PORT=2222
+      - ROOT_URL=http://${SITE_DOMAIN}/
       - USER_UID=1000
       - USER_GID=1000
-      # DB
       - DB_TYPE=mysql
       - DB_HOST=db:3306
-      - DB_NAME=gitea
-      - DB_USER=gitea
-      - DB_PASSWD=gitea
-    restart: always
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWD=${DB_PASSWD}
     networks:
-      - gitea
+      - web
+      - db
     volumes:
       - gitea:/data
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     ports:
-      - "3000:3000"
-      - "222:22"
-    # DB
+      - "3000"
+      - "2222"
     depends_on:
+      - traefik
       - db
+    labels:
+      - "traefik.enable=true"
+      # The HTTPS service
+      - "traefik.http.routers.giteaWeb.rule=Host(`${SITE_DOMAIN}`)"
+      - "traefik.http.routers.giteaWeb.entrypoints=websecure"
+      - "traefik.http.routers.giteaWeb.tls=true"
+      - "traefik.http.routers.giteaWeb.tls.certresolver=le"
+      - "traefik.http.routers.giteaWeb.service=giteaWebSvc"
+      - "traefik.http.services.giteaWebSvc.loadbalancer.server.port=3000"
+      # The SSH service
+      - "traefik.tcp.routers.giteaSSH.rule=HostSNI(`*`)"
+      - "traefik.tcp.routers.giteaSSH.entrypoints=ssh"
+      - "traefik.tcp.routers.giteaSSH.service=giteaSSHSvc"
+      - "traefik.tcp.services.giteaSSHSvc.loadbalancer.server.port=2222"
 
-  # DB
   db:
-    image: mysql:5.7
-    restart: always
+    image: "mysql:5.7"
+    container_name: "mysql"
+    restart: unless-stopped
     environment:
-      - MYSQL_ROOT_PASSWORD=gitea
-      - MYSQL_USER=gitea
-      - MYSQL_PASSWORD=gitea
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
       - MYSQL_DATABASE=gitea
     networks:
-      - gitea
+      - db
     volumes:
-      - ./mysql:/var/lib/mysql
+      - db:/var/lib/mysql
+

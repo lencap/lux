@@ -1,0 +1,79 @@
+# docker-compose-base.yml
+
+# Basic Traefik TLS setup using LetsEncrypt certs with DNS validation
+# - DNS hosted at DigitalOcean
+# - Traefik API and Dashboard with basic auth
+# - Sample test myapp 
+
+# The respective environment variables should be placed in the .env file
+
+version: "3.3"
+
+networks:
+  web:
+    external: true
+
+services:
+  traefik:
+    image: "traefik:v2.2"
+    container_name: "traefik"
+    restart: always
+    environment:
+      DO_AUTH_TOKEN: "${DO_AUTH_TOKEN}"
+    command:
+      - "--log.level=INFO"
+      - "--providers.docker=true"
+      - "--entryPoints.web.address=:80"
+      - "--entryPoints.websecure.address=:443"
+      - "--providers.docker.exposedByDefault=false"
+      - "--api=true"
+      - "--api.dashboard=true"
+      # LetsEncrypt params
+      - "--certificatesResolvers.le.acme.email=${LE_EMAIL}"
+      - "--certificatesResolvers.le.acme.storage=/acme.json"
+      - "--certificatesResolvers.le.acme.dnsChallenge=true"
+      - "--certificatesResolvers.le.acme.dnschallenge.provider=digitalocean"
+    labels:
+      - "traefik.enable=true"
+      # Middleware global redirect to https
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+      - "traefik.http.routers.redirs.rule=hostregexp(`{host:.+}`)"
+      - "traefik.http.routers.redirs.entrypoints=web"
+      - "traefik.http.routers.redirs.middlewares=redirect-to-https"
+      # Dashboard
+      - "traefik.http.routers.traefik.rule=Host(`${TRAEFIK_DOMAIN}`)"
+      - "traefik.http.routers.traefik.entrypoints=websecure"
+      - "traefik.http.routers.traefik.tls=true"
+      - "traefik.http.routers.traefik.service=api@internal"
+      - "traefik.http.routers.traefik.tls.certresolver=le"
+      - "traefik.http.routers.traefik.middlewares=auth"
+      # Gen pw with: echo $(htpasswd -nb user pwd) | sed -e s/\\$/\\$\\$/g
+      - "traefik.http.middlewares.auth.basicauth.users=traefik:$$apr1$$qu17ZAy1$$CV4OFN7oV3vRXaSEpPpeA0"
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - web
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./acme.json:/acme.json"
+    # Option: Bring your on certs
+      #- "./certs:/etc/certs/"
+    #tls:
+    #  certificates:
+    #    - certFile: /etc/certs/fullchain.pem
+    #      keyFile: /etc/certs/privkey.pem
+
+  myapp:
+    image: "containous/whoami"
+    container_name: "myapp"
+    restart: always
+    networks:
+      - web
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.myapp.rule=Host(`${SITE_DOMAIN}`)"
+      - "traefik.http.routers.myapp.entrypoints=websecure"
+      - "traefik.http.routers.myapp.tls=true"
+      - "traefik.http.routers.myapp.tls.certresolver=le"
+
