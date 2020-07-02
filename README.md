@@ -38,7 +38,7 @@ Once the system is running, go to your domain https://code.mydomain.com, click _
 The Traefik Dashboard should be available at your domain https://traefik.mydomain.com.
 
 ## SSH
-The web UI access is easy enough via the browser, but the more popupar SSH access should also available via using user `git`, on your domain `code.mydomain.com`, and over port `2222`. To simplify this access, it's easier to update your `$HOME/.ssh/config` file with a stanza such as this:
+The web UI access is easy enough via the browser, but the more popupar SSH access should also be available using user `git`, on your domain `code.mydomain.com`, and over port `2222`. To simplify this access, it's easier to update your `$HOME/.ssh/config` file with a stanza such as this:
 ```
 Host                     code.mydomain.com
   Port                   2222
