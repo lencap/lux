@@ -6,6 +6,7 @@ Also included is the alternate `docker-compose-base.yml`, which is an even more 
 * DNS hosted at [DigitalOcean](https://www.digitalocean.com/)
 * Traefik API and Dashboard with basic HTTP auth login
 * Sample test myapp
+
 This base configuration can be used to front any other application with __Traefik__. 
 
 ## Prerequisites
