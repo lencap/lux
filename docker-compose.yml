@@ -37,6 +37,7 @@ services:
       - "--certificatesResolvers.le.acme.dnschallenge.provider=digitalocean"
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=web"
       # Middleware global redirect to https
       - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
       - "traefik.http.routers.redirs.rule=hostregexp(`{host:.+}`)"
