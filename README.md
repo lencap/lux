@@ -48,6 +48,9 @@ Host                     code.mydomain.com
   UserKnownHostsFile     /dev/null
 ```
 
+## Existing SSL certificates
+Both docker-compose files have optional, commented out, sections to allow the use of existing SSL certs. This may be handy if you're not interested in using the  LetsEncrypt automation, or maybe you have your own certs.   
+
 ## Backup
 TODO: Describe best way to backup the system
 
