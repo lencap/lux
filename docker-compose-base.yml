@@ -1,12 +1,5 @@
 # docker-compose-base.yml
 
-# Basic Traefik TLS setup using LetsEncrypt certs with DNS validation
-# - DNS hosted at DigitalOcean
-# - Traefik API and Dashboard with basic auth
-# - Sample test myapp 
-
-# The respective environment variables should be placed in the .env file
-
 version: "3.3"
 
 networks:
@@ -57,7 +50,7 @@ services:
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
       - "./acme.json:/acme.json"
-    # Option: Bring your on certs
+    # Optional: Use existing SSL certs instead of generating new ones with LE
       #- "./certs:/etc/certs/"
     #tls:
     #  certificates:

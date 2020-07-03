@@ -1,9 +1,5 @@
 # docker-compose.yml
 
-# Sets up a Source Control Management system like Github.com, using Gitea,
-# MySQL, and Traefik. This work is a n extension of the intructions detailed
-# at https://docs.gitea.io/en-us/install-with-docker/
-
 version: "3.3"
 
 networks:
