@@ -21,7 +21,7 @@ services:
       - "--providers.docker.exposedByDefault=false"
       - "--api=true"
       - "--api.dashboard=true"
-      # LetsEncrypt params
+      - "--providers.docker.network=web"
       - "--certificatesResolvers.le.acme.email=${LE_EMAIL}"
       - "--certificatesResolvers.le.acme.storage=/acme.json"
       - "--certificatesResolvers.le.acme.dnsChallenge=true"
