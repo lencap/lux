@@ -100,6 +100,7 @@ services:
       - db
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=web"
       # The HTTPS service
       - "traefik.http.routers.giteaWeb.rule=Host(`${SITE_DOMAIN}`)"
       - "traefik.http.routers.giteaWeb.entrypoints=websecure"
