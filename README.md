@@ -1,5 +1,5 @@
 # lux
-Lux is a basic `docker-compose.yml` configuration to set up a [Source Control Management system](https://en.wikipedia.org/wiki/Version_control), like [Github](https://github.com), using [Gitea](https://gitea.io/en-us/), MySQL, and [Traefik](https://containo.us/traefik/).
+Lux is a basic `docker-compose.yml` configuration to set up a [Source Control Management system](https://en.wikipedia.org/wiki/Version_control), like [Github](https://github.com), using [Gitea](https://gitea.io/en-us/), MySQL, and [Traefik](https://containo.us/traefik/). This work is just an extension of the intructions detailed at https://docs.gitea.io/en-us/install-with-docker/
 
 Also included is the alternate `docker-compose-base.yml`, which is an even more basic configuration that sets up the following:
 * Basic Traefik TLS setup using [LetsEncrypt](https://letsencrypt.org/) certs with DNS challenge
