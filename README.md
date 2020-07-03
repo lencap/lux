@@ -25,6 +25,10 @@ MYSQL_ROOT_PASSWORD=gitea
 MYSQL_USER=gitea
 MYSQL_PASSWORD=gitea
 ```
+* Finally, create the external `web` network:
+```
+docker network create web
+```
 
 ## Getting started
 To set up __Lux__, run:
@@ -50,6 +54,9 @@ Host                     code.mydomain.com
 
 ## Existing SSL certificates
 Both docker-compose files have optional, commented out, sections to allow the use of existing SSL certs. This may be handy if you're not interested in using the  LetsEncrypt automation, or maybe you have your own certs.   
+
+## Networking
+TODO: Detail the networking aspects
 
 ## Backup
 TODO: Describe best way to backup the system
