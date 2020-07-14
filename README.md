@@ -9,7 +9,7 @@ Also included is the alternate `docker-compose-base.yml`, which is an even more 
 
 This base configuration can be used to front any other application with __Traefik__. 
 
-## Prerequisites
+## Getting started
 * Set up an Ubuntu 18.04 server, and install Docker and Docker-Compose
 * Checkout this repo and cd to `lux` directory
 * Create an `.env` file and populate the following parameters _to your liking_:
@@ -25,35 +25,27 @@ MYSQL_ROOT_PASSWORD=gitea
 MYSQL_USER=gitea
 MYSQL_PASSWORD=gitea
 ```
-* Finally, create the external `web` network:
+* Next, create the external `web4` network:
 ```
-docker network create web
+docker network create --gateway 10.10.4.1 --subnet 10.10.4.0/24 web4
 ```
-
-## Getting started
-To set up __Lux__, run:
+* Bring up the system:
 ```
 docker-compose --verbose up -d
 ```
 
 ## Configuration
-Once the system is running, go to your domain https://code.mydomain.com, click _Sign In_ and do the final system configuration.
-
-The Traefik Dashboard should be available at your domain https://traefik.mydomain.com.
+Once the system is running, go to your domain http://code.mydomain.com, click _Sign In_ and do the final system configuration. Also, the Traefik Dashboard should be available at http://traefik.mydomain.com. Both should switch to HTTPS using SSL certs provided by LE.
 
 ## SSH
-The web UI access is easy enough via the browser, but the more popupar SSH access should also be available using user `git`, on your domain `code.mydomain.com`, and over port `2222`. To simplify this access, it's easier to update your `$HOME/.ssh/config` file with a stanza such as this:
+The web UI access is easy enough via the browser, but the more popular SSH access should also be available using user `git`, on your domain `code.mydomain.com`, and over port `22`. To simplify this access, it's easier to update your `$HOME/.ssh/config` file with a stanza such as this:
 ```
 Host                     code.mydomain.com
-  Port                   2222
   User                   git
   IdentityFile           /home/user/.ssh/id_ed25519
   StrictHostKeyChecking  no
   UserKnownHostsFile     /dev/null
 ```
-
-## Existing SSL certificates
-Both docker-compose files have optional, commented out, sections to allow the use of existing SSL certs. This may be handy if you're not interested in using the  LetsEncrypt automation, or maybe you have your own certs.   
 
 ## Networking
 TODO: Detail the networking aspects
