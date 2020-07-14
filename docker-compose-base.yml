@@ -1,74 +1,88 @@
-# docker-compose-base.yml
+# This configuration sets up a Traefik edge router with one sample app,
+# using one specific network IP, with SSL certificates provided by LetsEncrypt.
+# Other more elaborate setups can be crafted from this one base configuration.
+# Ensure you supply an ./.env file with the relevant environment variables.
 
 version: "3.3"
 
 networks:
-  web:
+  web4:
+    # You must create this network manually, and ensure it is routable:
+    #   docker network create --gateway 10.10.4.1 --subnet 10.10.4.0/24 web4
+    # You can change the name, but ensure that's reflected across this file.
     external: true
 
 services:
   traefik:
-    image: "traefik:v2.2"
+    image: "traefik:v2.2.4"
     container_name: "traefik"
-    restart: always
+    restart: unless-stopped
     environment:
+      # This setup uses a DNS domain hosted at DigitalOcean. You'll need to make
+      # the necessary adjustments if your DNS is managed by another provider. 
       DO_AUTH_TOKEN: "${DO_AUTH_TOKEN}"
     command:
-      - "--log.level=INFO"
       - "--providers.docker=true"
       - "--entryPoints.web.address=:80"
       - "--entryPoints.websecure.address=:443"
       - "--providers.docker.exposedByDefault=false"
       - "--api=true"
       - "--api.dashboard=true"
-      - "--providers.docker.network=web"
+      - "--providers.docker.network=web4"
       - "--certificatesResolvers.le.acme.email=${LE_EMAIL}"
       - "--certificatesResolvers.le.acme.storage=/acme.json"
       - "--certificatesResolvers.le.acme.dnsChallenge=true"
       - "--certificatesResolvers.le.acme.dnschallenge.provider=digitalocean"
     labels:
       - "traefik.enable=true"
-      - "traefik.docker.network=web"
-      # Middleware global redirect to https
-      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
-      - "traefik.http.routers.redirs.rule=hostregexp(`{host:.+}`)"
-      - "traefik.http.routers.redirs.entrypoints=web"
-      - "traefik.http.routers.redirs.middlewares=redirect-to-https"
-      # Dashboard
-      - "traefik.http.routers.traefik.rule=Host(`${TRAEFIK_DOMAIN}`)"
-      - "traefik.http.routers.traefik.entrypoints=websecure"
-      - "traefik.http.routers.traefik.tls=true"
-      - "traefik.http.routers.traefik.service=api@internal"
-      - "traefik.http.routers.traefik.tls.certresolver=le"
-      - "traefik.http.routers.traefik.middlewares=auth"
-      # Gen pw with: echo $(htpasswd -nb user pwd) | sed -e s/\\$/\\$\\$/g
+      - "traefik.docker.network=web4"
+      # Redirect all HTTP traffic to HTTPS on this IP
+      - "traefik.http.routers.traefik.rule=hostregexp(`{host:.+}`)"
+      - "traefik.http.routers.traefik.entrypoints=web"
+      - "traefik.http.routers.traefik.middlewares=traefik-https-redirect"
+      - "traefik.http.middlewares.traefik-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.traefik-https-redirect.redirectscheme.permanent=true"
+      # Route for Traefik Dashboard
+      - "traefik.http.routers.dashboard.rule=Host(`${TRAEFIK_DOMAIN}`)"
+      - "traefik.http.routers.dashboard.entrypoints=websecure"
+      - "traefik.http.routers.dashboard.service=api@internal"
+      - "traefik.http.routers.dashboard.tls=true"
+      - "traefik.http.routers.dashboard.tls.certresolver=le"
+      - "traefik.http.routers.dashboard.middlewares=auth"
+      # Generated pwd with: echo $(htpasswd -nb user pwd) | sed -e s/\\$/\\$\\$/g
       - "traefik.http.middlewares.auth.basicauth.users=traefik:$$apr1$$qu17ZAy1$$CV4OFN7oV3vRXaSEpPpeA0"
     ports:
       - "80:80"
       - "443:443"
     networks:
-      - web
+      web4:
+        # Point all DNS domains to this specific IP address
+        ipv4_address: 10.10.4.2
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
       - "./acme.json:/acme.json"
-    # Optional: Use existing SSL certs instead of generating new ones with LE
-      #- "./certs:/etc/certs/"
-    #tls:
-    #  certificates:
-    #    - certFile: /etc/certs/fullchain.pem
-    #      keyFile: /etc/certs/privkey.pem
 
   myapp:
-    image: "containous/whoami"
+    image: "containous/whoami:v1.3.0"
     container_name: "myapp"
-    restart: always
+    restart: unless-stopped
     networks:
-      - web
+      web4:
+        # Todo: Find way to have it use any available IP in this subnet
+        ipv4_address: 10.10.4.3
+    ports:
+      - "80"
     labels:
       - "traefik.enable=true"
-      - "traefik.docker.network=web"
+      - "traefik.docker.network=web4"
+      # Route for myapp
       - "traefik.http.routers.myapp.rule=Host(`${SITE_DOMAIN}`)"
       - "traefik.http.routers.myapp.entrypoints=websecure"
       - "traefik.http.routers.myapp.tls=true"
       - "traefik.http.routers.myapp.tls.certresolver=le"
 
+# To run:
+# touch acme.json
+# chmod 0600 acme.json
+# docker-compose --verbose up -d
+  
