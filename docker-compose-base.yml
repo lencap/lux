@@ -1,7 +1,7 @@
 # This configuration sets up a Traefik edge router with one sample app,
 # using one specific network IP, with SSL certificates provided by LetsEncrypt.
 # Other more elaborate setups can be crafted from this one base configuration.
-# Supply the required environment variables via ./.env file.
+# You must supply the required environment variables via the ./.env file.
 
 version: "3.3"
 
