@@ -63,3 +63,12 @@ TODO: Describe best way to backup the system
 
 ## Upgrade
 TODO: Describe upgrade process
+
+## References
+1. https://docs.traefik.io/routing/routers/#certresolver
+2. https://docs.gitea.io/en-us/install-with-docker/
+3. https://www.howtoforge.com/tutorial/install-gitea-using-docker-on-ubuntu/
+4. https://stackoverflow.com/questions/61774228/traefik-cant-connect-to-server-with-docker-compose
+5. https://www.reddit.com/r/Traefik/comments/e9ubk2/le_wildcard_certificates_on_traefik_v2/
+6. https://containo.us/blog/traefik-2-0-docker-101-fc2893944b9d/
+7. https://www.smarthomebeginner.com/traefik-2-docker-tutorial/

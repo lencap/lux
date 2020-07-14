@@ -1,7 +1,7 @@
 # This configuration sets up a Traefik edge router with one sample app,
 # using one specific network IP, with SSL certificates provided by LetsEncrypt.
 # Other more elaborate setups can be crafted from this one base configuration.
-# Ensure you supply an ./.env file with the relevant environment variables.
+# Supply the required environment variables via ./.env file.
 
 version: "3.3"
 
@@ -51,13 +51,13 @@ services:
       - "traefik.http.routers.dashboard.middlewares=auth"
       # Generated pwd with: echo $(htpasswd -nb user pwd) | sed -e s/\\$/\\$\\$/g
       - "traefik.http.middlewares.auth.basicauth.users=traefik:$$apr1$$qu17ZAy1$$CV4OFN7oV3vRXaSEpPpeA0"
-    ports:
-      - "80:80"
-      - "443:443"
     networks:
       web4:
         # Point all DNS domains to this specific IP address
         ipv4_address: 10.10.4.2
+    ports:
+      - "80:80"
+      - "443:443"
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
       - "./acme.json:/acme.json"
@@ -67,9 +67,7 @@ services:
     container_name: "myapp"
     restart: unless-stopped
     networks:
-      web4:
-        # Todo: Find way to have it use any available IP in this subnet
-        ipv4_address: 10.10.4.3
+      - web4  # Will use next available IP in 10.10.4.0/24
     ports:
       - "80"
     labels:
@@ -82,7 +80,7 @@ services:
       - "traefik.http.routers.myapp.tls.certresolver=le"
 
 # To run:
+# vi .env
 # touch acme.json
 # chmod 0600 acme.json
 # docker-compose --verbose up -d
-  

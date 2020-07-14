@@ -1,9 +1,15 @@
-# docker-compose.yml
+# This configuration sets up a Traefik edge router with Gitea SCM + MySQL
+# containers, using a specific IP address, with SSL certificates provided
+# by LetsEncrypt. You must supply the required environment variables via
+# the ./.env file.
 
 version: "3.3"
 
 networks:
-  web:
+  web4:
+    # You must create this network manually, and ensure it is routable:
+    #   docker network create --gateway 10.10.4.1 --subnet 10.10.4.0/24 web4
+    # You can change the name, but ensure that's reflected across this file.
     external: true
   db:
     external: false
@@ -16,21 +22,22 @@ volumes:
 
 services:
   traefik:
-    image: "traefik:v2.2"
+    image: "traefik:v2.2.4"
     container_name: "traefik"
     restart: unless-stopped
     environment:
+      # This setup uses a DNS domain hosted at DigitalOcean. You'll need to make
+      # the necessary adjustments if your DNS is managed by another provider.
       DO_AUTH_TOKEN: "${DO_AUTH_TOKEN}"
     command:
-      - "--log.level=INFO"
       - "--providers.docker=true"
-      - "--entryPoints.ssh.address=:2222"
+      - "--entryPoints.ssh.address=:22"
       - "--entryPoints.web.address=:80"
       - "--entryPoints.websecure.address=:443"
       - "--providers.docker.exposedByDefault=false"
       - "--api=true"
       - "--api.dashboard=true"
-      - "--providers.docker.network=web"
+      - "--providers.docker.network=web4"
       - "--certificatesResolvers.le.acme.email=${LE_EMAIL}"
       - "--certificatesResolvers.le.acme.storage=/acme.json"
       - "--certificatesResolvers.le.acme.dnsChallenge=true"
@@ -38,35 +45,31 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=web"
-      # Middleware global redirect to https
-      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
-      - "traefik.http.routers.redirs.rule=hostregexp(`{host:.+}`)"
-      - "traefik.http.routers.redirs.entrypoints=web"
-      - "traefik.http.routers.redirs.middlewares=redirect-to-https"
-      # Dashboard
-      - "traefik.http.routers.traefik.rule=Host(`${TRAEFIK_DOMAIN}`)"
-      - "traefik.http.routers.traefik.entrypoints=websecure"
-      - "traefik.http.routers.traefik.tls=true"
-      - "traefik.http.routers.traefik.service=api@internal"
-      - "traefik.http.routers.traefik.tls.certresolver=le"
-      - "traefik.http.routers.traefik.middlewares=auth"
+      # Redirect all HTTP traffic to HTTPS on this IP
+      - "traefik.http.routers.traefik.rule=hostregexp(`{host:.+}`)"
+      - "traefik.http.routers.traefik.entrypoints=web"
+      - "traefik.http.routers.traefik.middlewares=traefik-https-redirect"
+      - "traefik.http.middlewares.traefik-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.traefik-https-redirect.redirectscheme.permanent=true"
+      # Route for Traefik Dashboard
+      - "traefik.http.routers.dashboard.rule=Host(`${TRAEFIK_DOMAIN}`)"
+      - "traefik.http.routers.dashboard.entrypoints=websecure"
+      - "traefik.http.routers.dashboard.service=api@internal"
+      - "traefik.http.routers.dashboard.tls=true"
+      - "traefik.http.routers.dashboard.tls.certresolver=le"
+      - "traefik.http.routers.dashboard.middlewares=auth"
       # Gen pw with: echo $(htpasswd -nb user pwd) | sed -e s/\\$/\\$\\$/g
       - "traefik.http.middlewares.auth.basicauth.users=traefik:$$apr1$$qu17ZAy1$$CV4OFN7oV3vRXaSEpPpeA0"
+    networks:
+      web4:
+        ipv4_address: 10.10.4.2  # Point all DNS domains to this address
     ports:
+      - "2222:22"
       - "80:80"
       - "443:443"
-      - "2222:2222"
-    networks:
-      - web
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
       - "./acme.json:/acme.json"
-    # Optional: Use existing SSL certs instead of generating new ones with LE
-      #- "./certs:/etc/certs/"
-    #tls:
-    #  certificates:
-    #    - certFile: /etc/certs/fullchain.pem
-    #      keyFile: /etc/certs/privkey.pem
 
   gitea:
     image: "gitea/gitea:1.12.1"
@@ -75,9 +78,9 @@ services:
     environment:
       - DOMAIN=${SITE_DOMAIN}
       - SSH_DOMAIN=${SITE_DOMAIN}
-      - SSH_PORT=2222
-      - SSH_LISTEN_PORT=2222
-      - ROOT_URL=http://${SITE_DOMAIN}/
+      - SSH_PORT=22
+      - SSH_LISTEN_PORT=22
+      - ROOT_URL=https://${SITE_DOMAIN}/
       - USER_UID=1000
       - USER_GID=1000
       - DB_TYPE=mysql
@@ -85,19 +88,6 @@ services:
       - DB_NAME=${DB_NAME}
       - DB_USER=${DB_USER}
       - DB_PASSWD=${DB_PASSWD}
-    networks:
-      - web
-      - db
-    volumes:
-      - gitea:/data
-      - /etc/timezone:/etc/timezone:ro
-      - /etc/localtime:/etc/localtime:ro
-    ports:
-      - "3000"
-      - "2222"
-    depends_on:
-      - traefik
-      - db
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=web"
@@ -112,7 +102,20 @@ services:
       - "traefik.tcp.routers.giteaSSH.rule=HostSNI(`*`)"
       - "traefik.tcp.routers.giteaSSH.entrypoints=ssh"
       - "traefik.tcp.routers.giteaSSH.service=giteaSSHSvc"
-      - "traefik.tcp.services.giteaSSHSvc.loadbalancer.server.port=2222"
+      - "traefik.tcp.services.giteaSSHSvc.loadbalancer.server.port=22"
+    networks:
+      - web4  # Will use next available IP in 10.10.4.0/24
+      - db
+    ports:
+      - "3000"
+      - "22"
+    volumes:
+      - gitea:/data
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    depends_on:
+      - traefik
+      - db
 
   db:
     image: "mysql:5.7"
@@ -128,3 +131,8 @@ services:
     volumes:
       - db:/var/lib/mysql
 
+# To run:
+# vi .env
+# touch acme.json
+# chmod 0600 acme.json
+# docker-compose --verbose up -d
