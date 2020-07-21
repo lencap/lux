@@ -25,7 +25,7 @@ MYSQL_ROOT_PASSWORD=gitea
 MYSQL_USER=gitea
 MYSQL_PASSWORD=gitea
 ```
-* Create `acme.json` and give it Traefik required permissions:
+* Create `acme.json` and give it Traefik required permissions (this file is unique to your setup and not kept in this repo):
 ```
 touch acme.json
 chmod 600 acme.json
