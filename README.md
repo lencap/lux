@@ -25,6 +25,11 @@ MYSQL_ROOT_PASSWORD=gitea
 MYSQL_USER=gitea
 MYSQL_PASSWORD=gitea
 ```
+* Create `acme.json` and give it Traefik required permissions:
+```
+touch acme.json
+chmod 600 acme.json
+```
 * Next, create the external `web4` network:
 ```
 docker network create --gateway 10.10.4.1 --subnet 10.10.4.0/24 web4
