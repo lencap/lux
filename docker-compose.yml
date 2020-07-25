@@ -44,7 +44,7 @@ services:
       - "--certificatesResolvers.le.acme.dnschallenge.provider=digitalocean"
     labels:
       - "traefik.enable=true"
-      - "traefik.docker.network=web"
+      - "traefik.docker.network=web4"
       # Redirect all HTTP traffic to HTTPS on this IP
       - "traefik.http.routers.traefik.rule=hostregexp(`{host:.+}`)"
       - "traefik.http.routers.traefik.entrypoints=web"
@@ -90,7 +90,7 @@ services:
       - DB_PASSWD=${DB_PASSWD}
     labels:
       - "traefik.enable=true"
-      - "traefik.docker.network=web"
+      - "traefik.docker.network=web4"
       # The HTTPS service
       - "traefik.http.routers.giteaWeb.rule=Host(`${SITE_DOMAIN}`)"
       - "traefik.http.routers.giteaWeb.entrypoints=websecure"
