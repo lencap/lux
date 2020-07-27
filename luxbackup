@@ -1,0 +1,17 @@
+#!/bin/bash
+# luxbackup
+
+printf "\nBackup Gitea:\n\n"
+printf "  1. Stop Traefik, Gitea and MySQL containers\n"
+printf "  2. Backup all volumes and .env and acme.json files\n"
+printf "  3. Restart everything\n\n"
+msg="Proceed? Y/N "
+read -p "$msg" -n 1 && [[ ! $REPLY =~ ^[Yy]$ ]] && { printf "\nAborted.\n" && exit 1 ; }
+printf "\n"
+
+docker-compose stop
+printf "Creating luxbackup-dump.tgz ...\n"
+sudo tar czfP luxbackup-dump.tgz /var/lib/docker/volumes/lux_db /var/lib/docker/volumes/lux_gitea .env acme.json
+docker-compose start
+printf "Done\n"
+exit 0

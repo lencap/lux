@@ -1,6 +1,8 @@
+luxbackup-dump.tgz
 acme.json
 .env
 mysql/
+*.swp
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
