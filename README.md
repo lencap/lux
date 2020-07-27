@@ -60,8 +60,8 @@ To backup a running system, run the `./luxbackup` script. The user context must 
 ```
 /var/lib/docker/volumes/lux_db/*
 /var/lib/docker/volumes/lux_gitea/*
-.env
-* acme.json
+./.env
+./acme.json
 ```
 
 To restore a system, make sure you have a `luxbackup-dump.tgz` file, then run the `./luxrestore` script. Again, the user needs to have sudo privilige.
