@@ -53,10 +53,18 @@ Host                     code.mydomain.com
 ```
 
 ## Networking
-TODO: Detail the networking aspects
+The `web4` network can of course be named anything you want, and so can the IP address. Just make sure all respective DNS names point to the right IPs.
 
-## Backup
-TODO: Describe best way to backup the system
+## Backup and Restore
+To backup a running system, run the `./luxbackup` script. The user context must have sudo privilige on the Docker host, in order to do a raw tar backup of the volumes under `/var/lib/docker/volumes/`. This is not a real-time backup process, and the service _will be stopped_ temporarily during this backup. The resulting backup will produce a `luxbackup-dump.tgz` file made up of:
+* /var/lib/docker/volumes/lux_db
+* /var/lib/docker/volumes/lux_gitea
+* .env
+* acme.json
+
+To restore a system, make sure you have a `luxbackup-dump.tgz` file, then run the `./luxrestore` script. Again, the user needs to have sudo privilige.
+
+For a full recovery using an dump file, you will need to create the external `web4` network beforehand (see command above):
 
 ## Upgrade
 TODO: Describe upgrade process
