@@ -1,5 +1,5 @@
 # lux
-Lux is a basic [Source Control Management system](https://en.wikipedia.org/wiki/Version_control), like [Github](https://github.com), using [Gitea](https://gitea.io/en-us/), MySQL, and [Traefik](https://containo.us/traefik/). This particular Gitea implementation uses a [Docker](https://en.wikipedia.org/wiki/Docker_(software)) Compose multi-container setup on Linux Ubuntu (`docker-compose.yml`). This work is just an extension of the intructions detailed at https://docs.gitea.io/en-us/install-with-docker/. This uses and creates the following:
+Lux is a basic [Source Control Management system](https://en.wikipedia.org/wiki/Version_control), like [Github](https://github.com) or [BitBucket](https://bitbucket.org), using [Gitea](https://gitea.io/en-us/), MySQL, and [Traefik](https://containo.us/traefik/). This particular Gitea implementation uses a [Docker](https://en.wikipedia.org/wiki/Docker_(software)) Compose multi-container setup on Linux Ubuntu (`docker-compose.yml`). This work is just an extension of the intructions detailed at https://docs.gitea.io/en-us/install-with-docker/. This uses and creates the following:
 
 * DNS domains hosted at [DigitalOcean](https://www.digitalocean.com/)
 * TLS certificates using [LetsEncrypt](https://letsencrypt.org/), with DNS challenge
