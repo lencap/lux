@@ -14,9 +14,9 @@ fi
 cd $HOME/lux
 
 /usr/local/bin/docker-compose stop
-printf "Creating luxbackup-dump.tgz ...\n"
-sudo tar czfP luxbackup-dump.tgz /var/lib/docker/volumes/lux_db /var/lib/docker/volumes/lux_gitea .env acme.json
-sudo chown user1:user1 luxbackup-dump.tgz
+printf "\nCreating luxbackup.tgz [$(date)] ...\n"
+sudo tar czfP luxbackup.tgz /var/lib/docker/volumes/lux_db /var/lib/docker/volumes/lux_gitea .env acme.json
+sudo chown user1:user1 luxbackup.tgz
 /usr/local/bin/docker-compose start
 printf "Done\n"
 exit 0

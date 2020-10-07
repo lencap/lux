@@ -2,14 +2,14 @@
 # luxrestore
 
 if [[ ! -e luxbackup-dump.tgz ]]; then
-    printf "Missing ./luxbackup-dump.tgz file\n"
+    printf "Missing ./luxbackup.tgz file\n"
     exit 1
 fi
 
 printf "\nRestore Gitea\n\n"
 printf "  1. Ensure old Traefik, Gitea and MySQL containers are gone\n"
 printf "  2. Ensure old volumes have been pruned\n"
-printf "  3. Restore from lunxbackup-dump.tgz file\n"
+printf "  3. Restore from lunxbackup.tgz file\n"
 printf "  4. Restart all\n\n"
 msg="Proceed? Y/N "
 read -p "$msg" -n 1 && [[ ! $REPLY =~ ^[Yy]$ ]] && { printf "\nAborted.\n" && exit 1 ; }
@@ -19,7 +19,7 @@ docker-compose down
 docker volume rm lux_db
 docker volume rm lux_gitea
 printf "Restoring volumes, and files ...\n"
-sudo tar -C / -xf luxbackup-dump.tgz
+sudo tar -C / -xf luxbackup.tgz
 sudo mv /.env .
 sudo mv /acme.json .
 docker-compose --verbose up -d
