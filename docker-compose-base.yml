@@ -14,7 +14,7 @@ networks:
 
 services:
   traefik:
-    image: "traefik:v2.2.4"
+    image: "traefik:v2.3.2"
     container_name: "traefik"
     restart: unless-stopped
     environment:
@@ -49,7 +49,9 @@ services:
       - "traefik.http.routers.dashboard.tls=true"
       - "traefik.http.routers.dashboard.tls.certresolver=le"
       - "traefik.http.routers.dashboard.middlewares=auth"
-      # Generated pwd with: echo $(htpasswd -nb user pwd) | sed -e s/\\$/\\$\\$/g
+      # Generate password for username 'traefik' with:
+      #   echo $(htpasswd -nb <username> <password>) | sed -e s/\\$/\\$\\$/g
+      #   echo $(htpasswd -nb traefik MyPwd/80,1) | sed -e s/\\$/\\$\\$/g
       - "traefik.http.middlewares.auth.basicauth.users=traefik:$$apr1$$qu17ZAy1$$CV4OFN7oV3vRXaSEpPpeA0"
     networks:
       web4:
