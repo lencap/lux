@@ -1,8 +1,9 @@
 #!/bin/bash
 # luxrestore
 
-if [[ ! -e luxbackup-dump.tgz ]]; then
-    printf "Missing ./luxbackup.tgz file\n"
+BAK=luxbackup.tgz
+if [[ ! -e "$BAK" ]]; then
+    printf "Missing '$BAK' file\n"
     exit 1
 fi
 
@@ -19,7 +20,7 @@ docker-compose down
 docker volume rm lux_db
 docker volume rm lux_gitea
 printf "Restoring volumes, and files ...\n"
-sudo tar -C / -xf luxbackup.tgz
+sudo tar -C / -xf $BAK
 sudo mv /.env .
 sudo mv /acme.json .
 docker-compose --verbose up -d
