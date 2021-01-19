@@ -34,6 +34,8 @@ chmod 600 acme.json
 ```
 docker network create --gateway 10.10.4.1 --subnet 10.10.4.0/24 web4
 ```
+Of course, you can name the network `web4`, or anything else you want. And the CIDR block can also be anything you want, as long as it is routable from where you want to use it. Just make sure that `code.mydomain.com` points to 10.10.4.2, or whatever the first address is for the block you're using.
+
 * Bring up the system:
 ```
 docker-compose --verbose up -d
@@ -51,9 +53,6 @@ Host                     code.mydomain.com
   StrictHostKeyChecking  no
   UserKnownHostsFile     /dev/null
 ```
-
-## Networking
-The `web4` network can of course be named anything you want, and so can the IP address. Just make sure all respective DNS names point to the right IPs.
 
 ## Backup and Restore
 To backup a running system, run the `./luxbackup` script. The user context must have sudo privilege on the Docker host, in order to do a raw tar backup of the volumes under `/var/lib/docker/volumes/`.
