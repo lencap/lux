@@ -58,10 +58,12 @@ services:
       - "traefik.http.routers.dashboard.tls=true"
       - "traefik.http.routers.dashboard.tls.certresolver=le"
       - "traefik.http.routers.dashboard.middlewares=auth"
-      # Generate password for username 'traefik' with:
-      #   echo $(htpasswd -nb <username> <password>) | sed -e s/\\$/\\$\\$/g
-      #   echo $(htpasswd -nb traefik MyPwd/80,1) | sed -e s/\\$/\\$\\$/g
       - "traefik.http.middlewares.auth.basicauth.users=traefik:$$apr1$$qu17ZAy1$$CV4OFN7oV3vRXaSEpPpeA0"
+      # Above will set up username 'traefik' with password 'traefik', which of course you'll want to
+      # change. Use below command from Ubuntu CLI to generate your very own username/password string:
+      #     echo $(htpasswd -nb <username> <password>) | sed -e s/\\$/\\$\\$/g
+      #   Example:
+      #     echo $(htpasswd -nb traefik MyPwd/80,1) | sed -e s/\\$/\\$\\$/g
     networks:
       web4:
         ipv4_address: 10.10.4.2  # Point all DNS domains to this address
